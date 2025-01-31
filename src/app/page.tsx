@@ -1,101 +1,144 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/hooks/use-cart";
+import { ShoppingCartIcon, StarIcon } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+export type ProductItem = {
+  id: number;
+  title: string;
+  price: string;
+  category: string;
+  description: string;
+  image: string;
+  rating: {
+    rate: number;
+    count: number;
+  };
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [data, setData] = useState<ProductItem[]>([]);
+  const { cart, CartService } = useCart();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch("https://fakestoreapi.com/products");
+      const data = await res.json();
+      setData(data);
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      <header>
+        <div className="container mx-auto py-20">
+          <Dialog>
+            <DialogTrigger asChild>
+              <ShoppingCartIcon className="size-4" />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Carrito de compras</DialogTitle>
+
+                <div className="flex flex-col gap-4">
+                  {cart.map((item) => (
+                    <div key={item.product.id}>
+                      <p>{item.product.title}</p>
+                      <p>{item.quantity}</p>
+                    </div>
+                  ))}
+                </div>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </header>
+
+      <div className="bg-muted min-h-screen">
+        <div className="container mx-auto py-20">
+          <div className="grid grid-cols-4 gap-4">
+            {data.map((item) => (
+              <div
+                className="border border-gray-300 rounded-md p-6 bg-white flex flex-col"
+                key={item.id}
+              >
+                <div className="aspect-square relative mb-4">
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    height={500}
+                    width={500}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+
+                <p className="uppercase">{item.category}</p>
+
+                <h2 className="text-lg font-medium truncate mb-2">
+                  {item.title}
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  {item.description.slice(0, 100)}...
+                </p>
+
+                {/* Precio y rating */}
+                <div className="mt-auto flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold">${item.price}</p>
+
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
+                        {Array.from({ length: 5 }).map((_, index) => {
+                          const rating = item.rating.rate;
+
+                          const finalRating = Math.round(rating);
+
+                          return (
+                            <span key={index}>
+                              <StarIcon
+                                className={`w-4 h-4 ${
+                                  index < finalRating
+                                    ? "fill-yellow-500 text-yellow-500"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            </span>
+                          );
+                        })}
+                      </div>
+
+                      <p className="text-sm text-muted-foreground">
+                        ({item.rating.count})
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => {
+                      CartService.addToCart(item);
+                      alert("Producto agregado al carrito");
+                    }}
+                  >
+                    Agregar al carrito
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -41,6 +41,19 @@ const substractFromCart = (productId: number) => {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cart));
 };
 
+const deleteFromCart = (productId: number) => {
+  const cart = getCart();
+  const existingItem = cart.find(
+    (item: CartItem) => item.product.id === productId
+  );
+
+  if (existingItem) {
+    cart.splice(cart.indexOf(existingItem), 1);
+  }
+
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cart));
+};
+
 const clearCart = () => {
   localStorage.removeItem(LOCAL_STORAGE_KEY);
 };
@@ -50,6 +63,7 @@ const PrincipalCartService = {
   addToCart,
   substractFromCart,
   clearCart,
+  deleteFromCart,
 };
 
 export const useCart = () => {
@@ -74,12 +88,18 @@ export const useCart = () => {
     setCart(PrincipalCartService.getCart());
   };
 
+  const deleteFromCart = (productId: number) => {
+    PrincipalCartService.deleteFromCart(productId);
+    setCart(PrincipalCartService.getCart());
+  };
+
   return {
     cart,
     CartService: {
       addToCart,
       substractFromCart,
       clearCart,
+      deleteFromCart,
     },
   };
 };

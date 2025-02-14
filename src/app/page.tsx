@@ -2,7 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
-import { ShoppingCartIcon, StarIcon } from "lucide-react";
+import {
+  ShoppingCartIcon,
+  StarIcon,
+  Trash,
+  WalletIcon,
+} from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import {
@@ -12,11 +17,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useCredits } from "@/hooks/use-credits";
+import { cn } from "@/lib/utils";
 
 export type ProductItem = {
   id: number;
   title: string;
-  price: string;
+  price: number;
   category: string;
   description: string;
   image: string;
@@ -29,6 +36,9 @@ export type ProductItem = {
 export default function Home() {
   const [data, setData] = useState<ProductItem[]>([]);
   const { cart, CartService } = useCart();
+  const { credits, CreditsService } = useCredits();
+
+  const [selectedCredit, setSelectedCredit] = useState<number>(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,29 +50,142 @@ export default function Home() {
     fetchData();
   }, []);
 
+  const total = cart.reduce((acc, item) => {
+    return acc + item.product.price * item.quantity;
+  }, 0);
+
   return (
     <div>
       <header>
-        <div className="container mx-auto py-20">
-          <Dialog>
-            <DialogTrigger asChild>
-              <ShoppingCartIcon className="size-4" />
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Carrito de compras</DialogTitle>
+        <div className="container mx-auto py-4 flex items-center justify-between gap-4">
+          <span className="font-extrabold tracking-widest uppercase">
+            Tienda BuenaOnda Talks
+          </span>
 
-                <div className="flex flex-col gap-4">
-                  {cart.map((item) => (
-                    <div key={item.product.id}>
-                      <p>{item.product.title}</p>
-                      <p>{item.quantity}</p>
-                    </div>
-                  ))}
-                </div>
-              </DialogHeader>
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-4">
+            <Dialog>
+              <DialogTrigger asChild>
+                <ShoppingCartIcon className="size-4" />
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Carrito de compras</DialogTitle>
+
+                  <div className="flex flex-col gap-4">
+                    {cart.length === 0 ? (
+                      <p>No hay productos en el carrito</p>
+                    ) : (
+                      <>
+                        {cart.map((item) => (
+                          <div key={item.product.id}>
+                            <p>{item.product.title}</p>
+                            <div className="flex items-center gap-2">
+                              <p>{item.quantity} u</p>
+
+                              <p>x ${item.product.price}</p>
+
+                              <button
+                                onClick={() => {
+                                  CartService.substractFromCart(
+                                    item.product.id
+                                  );
+                                }}
+                              >
+                                -
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  CartService.addToCart(item.product);
+                                }}
+                              >
+                                +
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  CartService.deleteFromCart(item.product.id);
+                                }}
+                              >
+                                <Trash className="size-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="flex items-center justify-between">
+                          <p>
+                            Total: <span className="font-bold">${total}</span>
+                          </p>
+
+                          <Button
+                            onClick={() => {
+                              CreditsService.substractFromCredits(total);
+
+                              CartService.clearCart();
+
+                              alert("Compra realizada correctamente");
+                            }}
+                            variant="default"
+                          >
+                            Comprar
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 border rounded-full border-primary"
+                >
+                  <WalletIcon className="size-4" />
+                  <p>{credits.credits.toFixed(2)}</p>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Tus créditos</DialogTitle>
+
+                  {[100, 200, 300].map((credit) => {
+                    return (
+                      <Button
+                        key={credit}
+                        variant="outline"
+                        className={cn(
+                          selectedCredit === credit && "bg-blue-500 text-white"
+                        )}
+                        onClick={() => {
+                          setSelectedCredit(credit);
+                        }}
+                      >
+                        {credit}
+                      </Button>
+                    );
+                  })}
+
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      CreditsService.addCredits(selectedCredit);
+
+                      setSelectedCredit(0);
+
+                      alert("Créditos agregados correctamente");
+                    }}
+                    disabled={selectedCredit === 0}
+                  >
+                    Agregar créditos
+                  </Button>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </header>
 
